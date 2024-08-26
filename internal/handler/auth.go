@@ -152,3 +152,89 @@ func Login(c *fiber.Ctx) error {
 		"token":    t,
 	})
 }
+
+func GetMe(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+
+	email := claims["email"].(string)
+
+	db := database.StartDB()
+
+	var userDb model.User
+
+	if err := db.Preload("Profile").Preload("Courses").Preload("Courses.Category").Where("email = ?", email).First(&userDb).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
+
+	type Result struct {
+		ID        uint   `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+		Courses   []struct {
+			ID          uint   `json:"id"`
+			Title       string `json:"title"`
+			Requirements string `json:"requirements"`
+			Levels      model.Levels `json:"levels"` // Mengubah menjadi string jika model.Levels adalah enum atau string
+			ImageURL    string `json:"imageURL"`
+			Category    struct {
+				ID           uint   `json:"id"`
+				CategoryName string `json:"category_name"`
+			} `json:"category"`
+			Description string `json:"description"`
+			Author      string `json:"author"`
+			CreatedAt   string `json:"createdAt"`
+			UpdatedAt   string `json:"updatedAt"`
+		} `json:"courses"`
+	}
+
+	var result Result
+
+	// Memetakan data userDb ke dalam result
+	result.ID = userDb.ID
+	result.FirstName = userDb.Profile.FirstName
+	result.LastName = userDb.Profile.LastName
+	result.Email = userDb.Email
+
+	// Memetakan data kursus ke dalam result
+	for _, course := range userDb.Courses {
+		var courseResult struct {
+			ID          uint   `json:"id"`
+			Title       string `json:"title"`
+			Requirements string `json:"requirements"`
+			Levels      model.Levels `json:"levels"`
+			ImageURL    string `json:"imageURL"`
+			Category    struct {
+				ID           uint   `json:"id"`
+				CategoryName string `json:"category_name"`
+			} `json:"category"`
+			Description string `json:"description"`
+			Author      string `json:"author"`
+			CreatedAt   string `json:"createdAt"`
+			UpdatedAt   string `json:"updatedAt"`
+		}
+
+		courseResult.ID = course.ID
+		courseResult.Title = course.Title
+		courseResult.Requirements = course.Requirements
+		courseResult.Levels = course.Levels
+		courseResult.ImageURL = course.ImageURL
+		courseResult.Description = course.Description
+		courseResult.Author = course.Author
+		courseResult.CreatedAt = course.CreatedAt.Format("2006-01-02 15:04:05")
+		courseResult.UpdatedAt = course.UpdatedAt.Format("2006-01-02 15:04:05")
+
+		courseResult.Category.ID = course.Category.ID
+		courseResult.Category.CategoryName = course.Category.CategoryName
+
+		result.Courses = append(result.Courses, courseResult)
+	}
+
+	// Return data pengguna yang sedang login beserta kursus yang dimiliki
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": result,
+	})
+}

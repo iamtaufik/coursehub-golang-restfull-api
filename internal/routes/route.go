@@ -9,11 +9,20 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
+	category := api.Group("/categories")
+	category.Get("/", handler.GetAllCategories)
+	category.Get("/:id", handler.GetCoursesByCategoryID)
+
 	course := api.Group("/courses")
-	course.Get("/", middleware.Protected(), handler.GetAllCourses)
+	course.Get("/", handler.GetAllCourses)
 	course.Post("/", handler.CreateCourse)
+	course.Get("/:id", handler.GetDetailCourse)
+	course.Get("/:id/join",middleware.Protected(), handler.JoinCourse)
 
 	auth := api.Group("/auth")
 	auth.Post("/register", handler.Register)
 	auth.Post("/login", handler.Login)
+
+	user := api.Group("/users")
+	user.Get("/me",middleware.Protected(), handler.GetMe)
 }
