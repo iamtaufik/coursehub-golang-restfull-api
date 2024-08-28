@@ -15,7 +15,7 @@ func SetupRoutes(app *fiber.App) {
 
 	course := api.Group("/courses")
 	course.Get("/", handler.GetAllCourses)
-	course.Post("/", handler.CreateCourse)
+	course.Post("/", middleware.Protected(), middleware.IsAdmin, handler.CreateCourse)
 	course.Get("/:id", handler.GetDetailCourse)
 	course.Get("/:id/join",middleware.Protected(), handler.JoinCourse)
 

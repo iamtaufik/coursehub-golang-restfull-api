@@ -275,8 +275,6 @@ func JoinCourse(c *fiber.Ctx) error {
 		})
 	}
 
-
-
 	var course model.Course
 	if err := db.Where("id = ?", courseID).First(&course).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -288,7 +286,6 @@ func JoinCourse(c *fiber.Ctx) error {
 	if err := db.Model(&user).Where("id = ?", courseID).Association("Courses").Find(&existingCourse); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to check if user joined course",
-			"error":   err.Error(),
 		})
 	}
 
