@@ -306,3 +306,27 @@ func JoinCourse(c *fiber.Ctx) error {
 		"message": "Successfully join course",
 	})
 }
+
+func DeleteCourse(c *fiber.Ctx) error {
+	db := database.StartDB()
+
+	courseID := c.Params("id")
+
+	var course model.Course
+	if err := db.Where("id = ?", courseID).First(&course).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Course not found",
+		})
+	}
+
+	if err := db.Delete(&course).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete course",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Course deleted successfully",
+	})
+}
