@@ -7,5 +7,6 @@ type User struct {
 	Email    	string  	`gorm:"not null;unique"`
 	Password 	string  	`gorm:"not null"`
 	Profile  	Profile		`gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
-	Courses 	[]Course	`gorm:"many2many:user_courses;"` 	
+	Courses 	[]Course	`gorm:"many2many:user_courses;"`
+	Transactions []Transaction 	
 }

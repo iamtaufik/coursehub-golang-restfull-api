@@ -27,4 +27,7 @@ func SetupRoutes(app *fiber.App) {
 
 	user := api.Group("/users")
 	user.Get("/me",middleware.Protected(), handler.GetMe)
+
+	paymemt := api.Group("/payment")
+	paymemt.Get("/checkout", handler.Checkout)
 }
